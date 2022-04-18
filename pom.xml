@@ -60,15 +60,13 @@
 	    <artifactId>jackson-core</artifactId>
 	    <version>2.13.2</version>
 	</dependency>
-	
-	<!-- https://mvnrepository.com/artifact/junit/junit -->
+
+	<!-- https://mvnrepository.com/artifact/org.json/json -->
 	<dependency>
-	    <groupId>junit</groupId>
-	    <artifactId>junit</artifactId>
-	    <version>4.13.2</version>
-	    <scope>test</scope>
+	    <groupId>org.json</groupId>
+	    <artifactId>json</artifactId>
+	    <version>20220320</version>
 	</dependency>
-	
   </dependencies>
 
    <build>

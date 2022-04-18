@@ -51,7 +51,7 @@ public class Utility {
 		String pathString = Utility.getCurrentPath();
 		PrintStream log = new PrintStream(
 				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), true));
-		String logText = String.format("\n[INFO] : '%S'", logs);
+		String logText = String.format("\n[INFO] : '%s'", logs);
 		log.append(logText);
 		log.close();
 	}
@@ -61,7 +61,7 @@ public class Utility {
 		String pathString = Utility.getCurrentPath();
 		PrintStream log = new PrintStream(
 				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), true));
-		String logText = String.format("\n[SCENARIO] : '%S' finished with status as '%S' at %S", scenarioName,
+		String logText = String.format("\n[SCENARIO] : '%s' finished with status as '%s' at %s", scenarioName,
 				status, LocalDateTime.now().toString());
 		log.append(
 				"\n************************************************************************************************************************\n");
@@ -76,7 +76,7 @@ public class Utility {
 		String pathString = Utility.getCurrentPath();
 		PrintStream log = new PrintStream(
 				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), true));
-		String logText = String.format("\n[SCENARIO] : '%S' started at %S", scenarioName,
+		String logText = String.format("\n[SCENARIO] : '%s' started at %s", scenarioName,
 				LocalDateTime.now().toString());
 		log.append(
 				"\n************************************************************************************************************************\n");
