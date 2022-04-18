@@ -21,6 +21,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import pojo.ErrorMessage;
 import pojo.JsonRequest;
 import pojo.Subscription;
 import pojo.SubscriptionStatus;
@@ -114,8 +115,10 @@ public class WebSocketAPIValidationSteps {
     		String sub_token  = row.get("token").trim();
     		subscriptionJSONObject.put("token", sub_token);
     	}
-
-    	ScenarioContext.setContext("SubRequest", jsonString);   
+ 
+    	System.out.println(subscriptionJSONObject);
+    	System.out.println(requestJSONObject.toString());
+    	ScenarioContext.setContext("SubRequest", requestJSONObject.toString());   
     }
 
     @Then("^I verify that subscription is successful$")
@@ -144,6 +147,36 @@ public class WebSocketAPIValidationSteps {
 		Assert.assertEquals("Verify the name", sub_name ,subscriptionStatus.getSubscription().getName());
 		
 		ScenarioContext.setContext("ChannelID", subscriptionStatus.getChannelID());   
+
+    }
+    
+    @Then("^I verify that subscription is not successful$")
+    public void i_verify_that_subscription_is_not_successful(DataTable dataTable) throws Throwable {
+		List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
+		Map<String, String> row = rows.get(0);
+		
+	    String sub_pair  = row.get("pair").trim();
+		String sub_name  = row.get("name").trim();
+		String sub_error  = row.get("error").trim();
+		
+		Client client = (Client) ScenarioContext.getContext("Client");
+
+		List<MessageQueue> subscriptionStatusList = client.getSocketClient().dataContext.getMessageList()
+		.stream()
+		.filter(c ->  c.getReceivedMessage().contains("subscriptionStatus")) 
+		.collect(Collectors.toList());
+		
+		Assert.assertEquals("Verify the number of subscriptionStatus meesage", 1,subscriptionStatusList.size());
+		
+		System.out.println(subscriptionStatusList.get(0).getReceivedMessage());
+		
+		ObjectMapper objectMapper = new ObjectMapper();
+		ErrorMessage errorMessage = objectMapper.readValue(subscriptionStatusList.get(0).getReceivedMessage(), ErrorMessage.class);
+				
+		Assert.assertEquals("Verify the currency pairs", sub_pair ,errorMessage.getPair());
+		Assert.assertEquals("Verify the status", "error" ,errorMessage.getStatus());
+		Assert.assertEquals("Verify the name", sub_name ,errorMessage.getSubscription().getName());
+		Assert.assertEquals("Verify the error message", sub_error ,errorMessage.getErrorMessage());
 
     }
 
@@ -219,8 +252,6 @@ public class WebSocketAPIValidationSteps {
     public void i_verify_that_subscription_feed_is_not_received_for_something_seconds(int elapsedTime) throws Throwable {
     	Client client = (Client) ScenarioContext.getContext("Client");
     	int channelID = (int) ScenarioContext.getContext("ChannelID");
-    	
-//    	int elapsedTime = Integer.parseInt(timeOut);
         LocalDateTime start_time = LocalDateTime.now();
         LocalDateTime end_time = start_time.plusSeconds(elapsedTime + 2); 
         Thread.sleep(elapsedTime * 1000);
@@ -247,5 +278,22 @@ public class WebSocketAPIValidationSteps {
     public void i_close_the_connection() throws Throwable {
     	Client client = (Client) ScenarioContext.getContext("Client");
     	client.closeConnection();
+    }
+    
+    @And("^I verify that subscription feed is not received when subscription is unsuccessful$")
+    public void i_verify_that_subscription_feed_is_not_received_when_subscription_is_unsuccessful() throws Throwable {
+    	Client client = (Client) ScenarioContext.getContext("Client");
+    	int elapsedTime = 10;
+        LocalDateTime start_time = LocalDateTime.now().plusSeconds(1);
+        LocalDateTime end_time = start_time.plusSeconds(elapsedTime + 1); 
+        Thread.sleep(elapsedTime * 1000);
+        
+        List<MessageQueue> subscribedMessageList = client.getSocketClient().dataContext.getMessageList()
+    		.stream()
+    		.filter(c -> c.getReceivedDateTime().isAfter(start_time) && 
+    				c.getReceivedDateTime().isBefore(end_time)   ) 
+    		.collect(Collectors.toList());
+        
+        Assert.assertTrue("Verify that no subscribed message is received when subscription unsuccessful", subscribedMessageList.size() == 0);
     }
 }
