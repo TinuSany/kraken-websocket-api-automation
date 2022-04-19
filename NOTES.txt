@@ -1,0 +1,9 @@
+kraken-websocket-api-automation
+===============================
+Java based test automation repo for Kraken Public Web Socket API testing. BDD approach is used (cucumber) is used. URL and API
+version is taken from property file. Please change it whenever there is a version change.
+
+1. Smoke Test
+-------------
+All 5 public messages are invoked individually and tested connection, subscribe, un-subscribe and receipt of subscription messages
+for a given time. Tag @Smoke is used if we need to run this alone. 

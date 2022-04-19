@@ -25,7 +25,7 @@ public class Utility {
 		String pathString = getCurrentPath();
 		Properties prop = new Properties();
 		FileInputStream fis = new FileInputStream(
-				pathString.concat(String.format("\\src\\test\\resources\\%s.properties", propFileName)));
+				pathString.concat(String.format("src/test/resources/%s.properties", propFileName)));
 		prop.load(fis);
 		fis.close();
 		return prop.getProperty(key);
@@ -36,13 +36,13 @@ public class Utility {
 		String pathString = Utility.getCurrentPath();
 		
 		//check the directory exists. If not, create the directory.
-		File logDir = new File(pathString.concat("\\target\\_log"));
+		File logDir = new File(pathString.concat("target/_log"));
 		if (!logDir.exists()){
 			logDir.mkdirs();
 		}
 		
 		PrintStream log = new PrintStream(
-				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), false));
+				new FileOutputStream(pathString.concat("target/_log/Logging.txt"), false));
 		log.close();
 	}
 	
@@ -50,7 +50,7 @@ public class Utility {
 	public static void AppendLogger(String logs) throws IOException {
 		String pathString = Utility.getCurrentPath();
 		PrintStream log = new PrintStream(
-				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), true));
+				new FileOutputStream(pathString.concat("target/_log/Logging.txt"), true));
 		String logText = String.format("\n[INFO] : '%s'", logs);
 		log.append(logText);
 		log.close();
@@ -60,7 +60,7 @@ public class Utility {
 	public static void AfterScenarioAppendLogger(String scenarioName, String status) throws IOException {
 		String pathString = Utility.getCurrentPath();
 		PrintStream log = new PrintStream(
-				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), true));
+				new FileOutputStream(pathString.concat("target/_log/Logging.txt"), true));
 		String logText = String.format("\n[SCENARIO] : '%s' finished with status as '%s' at %s", scenarioName,
 				status, LocalDateTime.now().toString());
 		log.append(
@@ -75,7 +75,7 @@ public class Utility {
 	public static void BeforeScenarioAppendLogger(String scenarioName) throws IOException {
 		String pathString = Utility.getCurrentPath();
 		PrintStream log = new PrintStream(
-				new FileOutputStream(pathString.concat("\\target\\_log\\Logging.txt"), true));
+				new FileOutputStream(pathString.concat("target/_log/Logging.txt"), true));
 		String logText = String.format("\n[SCENARIO] : '%s' started at %s", scenarioName,
 				LocalDateTime.now().toString());
 		log.append(
