@@ -44,15 +44,10 @@ Simple logs will be generated and will be available in target folder. Relative l
 ```
 Dockerfile
 -----------
-Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. Once the execution is completed copy the target folder to your local for logs and reports. Below are the sample commands
-```
-docker ps -l -q (take the container id and substitute in the following command)
+Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. Once the execution is completed check the target folder on your local for logs and reports. Below is the sample command to create and run docker images. Please execute the below command from Windows PowerShell or find the equivalent command for the current folder in the respective OS.
 
-docker cp <containerid>:/home/kraken/target/ target
 ```
-_**Note**_ : Useful docker commands
+docker build -t websocketapi:1 .
+
+docker run -v ${PWD}/target:/home/kraken/target websocketapi:1
 ```
-Build Docker Image : docker build -t <name>:<version> .
-  
-Run Docker Image : docker run <name>:<version>
-```  
