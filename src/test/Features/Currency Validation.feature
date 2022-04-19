@@ -1,7 +1,7 @@
 Feature: Verify the list of currencies supported
   As a user I would like to ensure that user is able to retrieve public-data feeds for all the supported currencies.
 
-  @Regression
+  @Regression @Currency
   Scenario Outline: Verify currencies supported
     Given I have connected to the Websocket API
     When I create a subscription request for a public-data feed

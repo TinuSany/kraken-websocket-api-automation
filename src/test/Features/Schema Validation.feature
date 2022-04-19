@@ -2,7 +2,7 @@ Feature: Perform schema validation on the data feeds
   As a user I would like to ensure that response shema matches with the API contract.
   # Due to time constraints schema for the spread feed alone validated.
 
-  @Regression @schema
+  @Regression @Schema
   Scenario Outline: Schema validation
     Given I have connected to the Websocket API
     When I create a subscription request for a public-data feed

@@ -1,7 +1,7 @@
 Feature: Verify the list of coins supported
   As a user I would like to ensure that user is able to retrieve public-data feeds for all the supported coins.
 
-  @Regression
+  @Regression @Coin
   Scenario Outline: Verify coins supported
     Given I have connected to the Websocket API
     When I create a subscription request for a public-data feed
