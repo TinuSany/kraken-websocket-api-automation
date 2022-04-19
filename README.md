@@ -23,32 +23,36 @@ How to run
 Navigate to the root folder of the cloned library in the command prompt before execute the below maven commands.
 
 •	Maven command to run the entire automation suite.
-
+```
 mvn test verify
-
+```
 •	Maven command to run the smoke automation alone.
-
+```
 mvn test verify -Dcucumber.filter.tags="@Smoke"
-
+```
 Test Report
 -----------
 Cucumber Report will be generated and will be available in target folder. Relative report path is given below.  
+```
 /target/cucumber-html-reports/overview-features.html
-
+```
 Logs
 -----------
 Simple logs will be generated and will be available in target folder. Relative log path is given below.  
+```
 /target/_log/Logging.txt
-
+```
 Dockerfile
 -----------
 Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. Once the execution is completed copy the target folder to your local for logs and reports. Below are the sample commands
-
+```
 docker ps -l -q (take the container id and substitute in the following command)
 
-docker cp **containerid**:/home/kraken/target/ target
-
+docker cp <containerid>:/home/kraken/target/ target
+```
 _**Note**_ : Useful docker commands
+```
 Build Docker Image : docker build -t <name>:<version> .
-Run Docker Image : docker run <name>:<version>
   
+Run Docker Image : docker run <name>:<version>
+```  
