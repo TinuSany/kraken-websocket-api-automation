@@ -42,4 +42,12 @@ Simple logs will be generated and will be available in target folder. Relative l
 
 Dockerfile
 -----------
-Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. 
+Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. Once the execution is completed copy the target folder to your local for logs and reports. Below are the sample commands
+
+docker ps -l -q (take the container id and substitute in the following command)
+docker cp <container id>:/home/kraken/target/ target
+
+_**Note**_ : Useful docker commands
+Build Docker Image : docker build -t <name>:<version> .
+Run Docker Image : docker run <name>:<version>
+  
