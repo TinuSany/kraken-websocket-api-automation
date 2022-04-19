@@ -3,7 +3,50 @@ kraken-websocket-api-automation
 Java based test automation repo for Kraken Public Web Socket API testing. BDD approach is used (cucumber) is used. URL and API
 version is taken from property file. Please change it whenever there is a version change.
 
+Basic logs are saved under target/_log/ folder. Cucumber hooks are used for initializing logs and adding final results on the 
+log. Custom class ScenarioContext is used for sharing data between steps. Cucumber reporting is used for the final reporting.
+Reports are available on target\cucumber-html-reports
+
 1. Smoke Test
 -------------
 All 5 public messages are invoked individually and tested connection, subscribe, un-subscribe and receipt of subscription messages
 for a given time. Tag @Smoke is used if we need to run this alone. 
+
+2. Coin Validation
+-------------
+Different coins supported by Kraken is tested in this. Since there are large number of coins (140+) I have commented the 
+datatable rows from 11. Subscribe and un-subscribe for a given currency tested.
+
+3. Currency Validation
+-------------
+Different currencies supported by Kraken is tested in this. Subscribe and un-subscribe for a given coin tested.
+
+4. Depth and Interval
+-------------
+Different depth levels are tested against book and different Intervals are tested against ohlc. Basic Subscribe and un-subscribe
+operations are performed.
+
+5. Error Validation
+-------------
+Few errors are validated during the subscription stage. This is not a complete list due to time constraints. Along with error 
+validation, additional tests are performed to ensure that subscription messages are not received.
+
+6. Multiple Currency Pairs
+-------------
+Multiple currencies are tested on Subscribe and un-subscribe
+
+7. Schema Validation
+-------------
+systemStatus and subscriptionStatus response's schema is validated. This needs to extended for other 
+
+8. Time Stamp Validation
+-------------
+Time stamp on the spread is validated to ensure that time stamp is increasing over time. 
+
+
+Note
+====
+1. Combination tests like book is adjusted for the last trade is not performed due to the time constraints
+2. Had challenges in identifying the errors on subscriptionStatus as it is not exactly matching with documentation.
+3. Subscription messages are JsonArrays without property name in most of the cases. This is making the shema validation bit
+challenging.
