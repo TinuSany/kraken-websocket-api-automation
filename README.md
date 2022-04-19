@@ -46,8 +46,11 @@ Dockerfile
 -----------
 Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. Once the execution is completed check the target folder on your local for logs and reports. Below is the sample command to create and run docker images. Please execute the below command from Windows PowerShell or find the equivalent command for the current folder in the respective OS.
 
+To Build Docker Image, Run the below command from the folder where dockerfile present.
 ```
 docker build -t websocketapi:1 .
-
+```
+To Run the Docker Image and copy target folder to your local, Run the below command in Windows PowerShell.
+```
 docker run -v ${PWD}/target:/home/kraken/target websocketapi:1
 ```
