@@ -27,6 +27,8 @@ public class MultipleCurrenciesValidationSteps {
 	@When("^I create a unsubscription request  with multiple currencies for a public-data feed$")
 	@When("^I create a subscription request with multiple currencies for a public-data feed$")
     public void i_create_a_subscription_request_with_multiple_currencies_for_a_publicdata_feed(DataTable dataTable) throws Throwable {
+		
+		//Convert to input data table to Map
 		List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
 		Map<String, String> row = rows.get(0);
 		
@@ -34,13 +36,15 @@ public class MultipleCurrenciesValidationSteps {
 		String sub_pair  = row.get("pair").trim();
 		String sub_name  = row.get("name").trim();
 
-
+		//Create objects for JSON Serialization
     	Subscription subscription = new Subscription();
     	subscription.setName(sub_name);
+    	
     	
     	List<String> pair = new ArrayList<String> ();
     	pair.add(sub_pair);
     	
+    	//Add additional currencies
     	if(row.get("pair1") != null && row.get("pair1").trim().length() > 0)
     	{
     		sub_pair  = row.get("pair1").trim();
@@ -67,6 +71,7 @@ public class MultipleCurrenciesValidationSteps {
     	jsonRequest.setPair(pair);
     	jsonRequest.setSubscription(subscription);
     	
+    	//Adding optional properties to the request based on the input
     	ObjectMapper mapper = new ObjectMapper();
     	String jsonString = mapper.writeValueAsString(jsonRequest);
     	    	
@@ -108,7 +113,7 @@ public class MultipleCurrenciesValidationSteps {
     		String sub_token  = row.get("token").trim();
     		subscriptionJSONObject.put("token", sub_token);
     	}
-    	
+    	//Storing objects for the use in subsequent steps
     	ScenarioContext.setContext("SubRequest", requestJSONObject.toString()); 
     	ScenarioContext.setContext("CurrencyList", pair);   
     }
@@ -116,15 +121,19 @@ public class MultipleCurrenciesValidationSteps {
 
     @Then("^I verify that subscription with multiple currencies is successful$")
     public void i_verify_that_subscription_with_multiple_currencies_is_successful(DataTable dataTable) throws Throwable {
+    	
+    	//Convert to input data table to Map
     	List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
 		Map<String, String> row = rows.get(0);
 		
 		String sub_name  = row.get("name").trim();
 		
+		//Retrieving objects stored in the previous steps
 		Client client = (Client) ScenarioContext.getContext("Client");
 		@SuppressWarnings("unchecked")
 		List<String> pair = (List<String>) ScenarioContext.getContext("CurrencyList");
-
+		
+		//Filtering the message which has subscriptionStatus
 		List<MessageQueue> subscriptionStatusList = client.getSocketClient().dataContext.getMessageList()
 		.stream()
 		.filter(c ->  c.getReceivedMessage().contains("subscriptionStatus")) 
@@ -133,6 +142,7 @@ public class MultipleCurrenciesValidationSteps {
 		Assert.assertEquals("Verify the number of subscriptionStatus message", pair.size(),subscriptionStatusList.size());
 		List<Integer> channelIDList = new ArrayList<Integer> ();
 		
+		//Repeat steps for all the currency pairs
 		for (int i = 0; i < pair.size(); i++)
 		{
 			String sub_pair = pair.get(i).toString(); 
@@ -141,6 +151,7 @@ public class MultipleCurrenciesValidationSteps {
 					.filter(c ->  c.getReceivedMessage().contains(sub_pair)) 
 					.collect(Collectors.toList());
 			
+			//Deserialization
 			ObjectMapper objectMapper = new ObjectMapper();
 			SubscriptionStatus subscriptionStatus = objectMapper.readValue(currencySubscriptionStatusList.get(0).getReceivedMessage(), SubscriptionStatus.class);
 			
@@ -163,27 +174,32 @@ public class MultipleCurrenciesValidationSteps {
 	    	channelIDList.add(subscriptionStatus.getChannelID());
 		}
 		
+		//Storing objects for the use in subsequent steps
 		ScenarioContext.setContext("ChannelIDList", channelIDList); 
     }
 
     @Then("^I verify that unsubscription with multiple currencies is successful$")
     public void i_verify_that_unsubscription_with_multiple_currencies_is_successful(DataTable dataTable) throws Throwable {
+    	//Convert to input data table to Map
     	List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
 		Map<String, String> row = rows.get(0);
 		
 		String sub_name  = row.get("name").trim();
 		
+		//Retrieving objects stored in the previous steps
 		Client client = (Client) ScenarioContext.getContext("Client");
 		@SuppressWarnings("unchecked")
 		List<String> pair = (List<String>) ScenarioContext.getContext("CurrencyList");
 		@SuppressWarnings("unchecked")
 		List<Integer> channelIDList = (List<Integer>) ScenarioContext.getContext("ChannelIDList");
 		
+		//Repeat steps for all the currency pairs
 		for (int i = 0; i < pair.size(); i++)
 		{
 			String sub_pair = pair.get(i).toString(); 
 			int channelID = channelIDList.get(i);
 			
+			//Filtering the message which has subscriptionStatus and channel id
 			List<MessageQueue> subscriptionStatusList = client.getSocketClient().dataContext.getMessageList()
 					.stream()
 					.filter(c ->  c.getReceivedMessage().contains("subscriptionStatus") &&
@@ -192,6 +208,7 @@ public class MultipleCurrenciesValidationSteps {
 					
 			Assert.assertEquals("Verify the number of subscriptionStatus messages", 2,subscriptionStatusList.size());
 			
+			//Deserialization
 			ObjectMapper objectMapper = new ObjectMapper();
 			SubscriptionStatus subscriptionStatus = objectMapper.readValue(subscriptionStatusList.get(1).getReceivedMessage(), SubscriptionStatus.class);
 			
@@ -204,9 +221,11 @@ public class MultipleCurrenciesValidationSteps {
     
     @And("I verify that subscription feed for multiple currencies are received for {int} seconds")
     public void i_verify_that_subscription_feed_for_multiple_currencies_are_received_for_30_seconds(int elapsedTime) throws Throwable {
+
+    	//Retrieving objects stored in the previous steps
     	Client client = (Client) ScenarioContext.getContext("Client");
     	
-    	//int elapsedTime = Integer.parseInt(timeOut);
+    	//Wait for a given seconds and check the messages received during this time
         LocalDateTime start_time = LocalDateTime.now();
         LocalDateTime end_time = start_time.plusSeconds(elapsedTime + 2); 
         Thread.sleep(elapsedTime * 1000);
@@ -216,11 +235,13 @@ public class MultipleCurrenciesValidationSteps {
 		@SuppressWarnings("unchecked")
 		List<Integer> channelIDList = (List<Integer>) ScenarioContext.getContext("ChannelIDList");
 		
+		//Repeat steps for all the currency pairs
 		for (int i = 0; i < pair.size(); i++)
 		{
 			String sub_pair = pair.get(i).toString(); 
 			int channelID = channelIDList.get(i);
 	        
+			//Filter messages which contains channel id and received between the start and end time
 	        List<MessageQueue> subscribedMessageList = client.getSocketClient().dataContext.getMessageList()
 	    		.stream()
 	    		.filter(c ->  c.getReceivedMessage().contains(String.valueOf(channelID)) && 
@@ -231,6 +252,7 @@ public class MultipleCurrenciesValidationSteps {
 	        Assert.assertTrue("Verify that atleast one subscribed message is received", subscribedMessageList.size() >= 1);
 	        Assert.assertTrue("Verify that currency is matching", subscribedMessageList.get(0).getReceivedMessage().contains(sub_pair));
 	        
+	        //Filter messages received between the start and end time - including heart beat
 	        subscribedMessageList = client.getSocketClient().dataContext.getMessageList()
 	        		.stream()
 	        		.filter(c -> c.getReceivedDateTime().isAfter(start_time) && 
@@ -243,21 +265,26 @@ public class MultipleCurrenciesValidationSteps {
 
     @And("I verify that subscription feed for multiple currencies are not received for {int} seconds")
     public void i_verify_that_subscription_feed_for_multiple_currencies_are_not_received_for_30_seconds(int elapsedTime) throws Throwable {
+    	//Retrieving objects stored in the previous steps
     	Client client = (Client) ScenarioContext.getContext("Client");
     
+    	//Wait for a given seconds and check the messages received during this time
         LocalDateTime start_time = LocalDateTime.now();
         LocalDateTime end_time = start_time.plusSeconds(elapsedTime + 2); 
         Thread.sleep(elapsedTime * 1000);
         
+        //Retrieving objects stored in the previous steps
         @SuppressWarnings("unchecked")
 		List<String> pair = (List<String>) ScenarioContext.getContext("CurrencyList");
 		@SuppressWarnings("unchecked")
 		List<Integer> channelIDList = (List<Integer>) ScenarioContext.getContext("ChannelIDList");
 		
+		//Repeat steps for all the currency pairs
 		for (int i = 0; i < pair.size(); i++)
 		{
 			int channelID = channelIDList.get(i);
 	        
+			//Filter messages which contains channel id and received between the start and end time
 	        List<MessageQueue> subscribedMessageList = client.getSocketClient().dataContext.getMessageList()
 	    		.stream()
 	    		.filter(c -> c.getReceivedMessage().contains(String.valueOf(channelID)) && 
@@ -267,6 +294,7 @@ public class MultipleCurrenciesValidationSteps {
 	        
 	        Assert.assertTrue("Verify that no subscribed message is received after the unsubscribe", subscribedMessageList.size() == 0);
 	        
+	        //Filter messages received between the start and end time - including heart beat
 	        subscribedMessageList = client.getSocketClient().dataContext.getMessageList()
 	        		.stream()
 	        		.filter(c -> c.getReceivedDateTime().isAfter(start_time) && 
