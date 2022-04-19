@@ -45,7 +45,8 @@ Dockerfile
 Docker file is available in the parent folder with ENTRYPOINT as mvn test verify. Once the execution is completed copy the target folder to your local for logs and reports. Below are the sample commands
 
 docker ps -l -q (take the container id and substitute in the following command)
-docker cp <container id>:/home/kraken/target/ target
+
+docker cp **containerid**:/home/kraken/target/ target
 
 _**Note**_ : Useful docker commands
 Build Docker Image : docker build -t <name>:<version> .
