@@ -1,12 +1,21 @@
 package StepDefinitions;
 
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.everit.json.schema.Schema;
+import org.everit.json.schema.loader.SchemaLoader;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,8 +125,6 @@ public class WebSocketAPIValidationSteps {
     		subscriptionJSONObject.put("token", sub_token);
     	}
  
-    	System.out.println(subscriptionJSONObject);
-    	System.out.println(requestJSONObject.toString());
     	ScenarioContext.setContext("SubRequest", requestJSONObject.toString());   
     }
 
@@ -136,7 +143,7 @@ public class WebSocketAPIValidationSteps {
 		.filter(c ->  c.getReceivedMessage().contains("subscriptionStatus")) 
 		.collect(Collectors.toList());
 		
-		Assert.assertEquals("Verify the number of subscriptionStatus meesage", 1,subscriptionStatusList.size());
+		Assert.assertEquals("Verify the number of subscriptionStatus message", 1,subscriptionStatusList.size());
 		
 		ObjectMapper objectMapper = new ObjectMapper();
 		SubscriptionStatus subscriptionStatus = objectMapper.readValue(subscriptionStatusList.get(0).getReceivedMessage(), SubscriptionStatus.class);
@@ -145,6 +152,18 @@ public class WebSocketAPIValidationSteps {
 		Assert.assertEquals("Verify the currency pairs", sub_pair ,subscriptionStatus.getPair());
 		Assert.assertEquals("Verify the status", "subscribed" ,subscriptionStatus.getStatus());
 		Assert.assertEquals("Verify the name", sub_name ,subscriptionStatus.getSubscription().getName());
+		
+		if(row.get("depth") != null && row.get("depth").trim().length() > 0)
+    	{
+    		String sub_depth  = row.get("depth").trim();
+    		Assert.assertTrue("Verify that channel name contains depth", subscriptionStatus.getChannelName().contains(sub_depth));
+    	}
+    	
+    	if(row.get("interval") != null && row.get("interval").trim().length() > 0)
+    	{
+    		String sub_interval  = row.get("interval").trim();
+    		Assert.assertTrue("Verify that channel name contains interval", subscriptionStatus.getChannelName().contains(sub_interval));
+    	}
 		
 		ScenarioContext.setContext("ChannelID", subscriptionStatus.getChannelID());   
 
@@ -166,7 +185,7 @@ public class WebSocketAPIValidationSteps {
 		.filter(c ->  c.getReceivedMessage().contains("subscriptionStatus")) 
 		.collect(Collectors.toList());
 		
-		Assert.assertEquals("Verify the number of subscriptionStatus meesage", 1,subscriptionStatusList.size());
+		Assert.assertEquals("Verify the number of subscriptionStatus message", 1,subscriptionStatusList.size());
 		
 		System.out.println(subscriptionStatusList.get(0).getReceivedMessage());
 		
@@ -197,7 +216,7 @@ public class WebSocketAPIValidationSteps {
 				c.getReceivedMessage().contains(String.valueOf(channelID))) 
 		.collect(Collectors.toList());
 		
-		Assert.assertEquals("Verify the number of subscriptionStatus meesages", 2,subscriptionStatusList.size());
+		Assert.assertEquals("Verify the number of subscriptionStatus messages", 2,subscriptionStatusList.size());
 		
 		ObjectMapper objectMapper = new ObjectMapper();
 		SubscriptionStatus subscriptionStatus = objectMapper.readValue(subscriptionStatusList.get(1).getReceivedMessage(), SubscriptionStatus.class);
@@ -296,4 +315,81 @@ public class WebSocketAPIValidationSteps {
         
         Assert.assertTrue("Verify that no subscribed message is received when subscription unsuccessful", subscribedMessageList.size() == 0);
     }
+    
+    @Then("I perform the schema validation on {string}")
+    public void i_perform_the_schema_validation_on_something(String schema) throws Throwable {
+
+		Client client = (Client) ScenarioContext.getContext("Client");
+		
+		//default is systemStatus
+		String schemaResourceName = "systemstatusschema.json";
+		String actualMessage = client.getSocketClient().dataContext.getMessage(0).getReceivedMessage();
+		
+		switch(schema)
+		{
+			case "subscriptionStatus" :
+				schemaResourceName = "subscriptionstatusschema.json";
+				actualMessage = client.getSocketClient().dataContext.getMessage(1).getReceivedMessage();
+				break;
+			case "spread" :
+				schemaResourceName = "spreadschema.json";
+				int channelID = (int) ScenarioContext.getContext("ChannelID");
+		        List<MessageQueue> subscribedMessageList = client.getSocketClient().dataContext.getMessageList()
+		    		.stream()
+		    		.filter(c ->  c.getReceivedMessage().contains(String.valueOf(channelID))) 
+		    		.collect(Collectors.toList());
+		        actualMessage = subscribedMessageList.get(1).getReceivedMessage();
+				break;
+		}
+
+		JSONObject jsonSchema = new JSONObject(
+		       new JSONTokener(getClass().getClassLoader().getResourceAsStream(schemaResourceName)));
+		   
+		JSONObject jsonSubject = new JSONObject(actualMessage);
+		   
+		Schema expectedSchema = SchemaLoader.load(jsonSchema);
+		expectedSchema.validate(jsonSubject);
+		System.out.println(String.format("Schema of %s is successfully tested.", schema));
+        
+    }
+    
+    @And("^I verify that timestamp increases over a time$")
+	public void i_verify_that_timestamp_increases_over_a_time() throws Throwable {
+		Client client = (Client) ScenarioContext.getContext("Client");
+		int channelID = (int) ScenarioContext.getContext("ChannelID");
+
+		List<MessageQueue> subscribedMessageList = client.getSocketClient().dataContext.getMessageList().stream()
+				.filter(c -> c.getReceivedMessage().contains("["+String.valueOf(channelID)))
+				.collect(Collectors.toList());
+
+		for (int i = 0; i < subscribedMessageList.size() - 1; i++) 
+		{
+
+			JSONArray jsonMessage1 = new JSONArray(subscribedMessageList.get(i).getReceivedMessage());
+			JSONArray jsonSpread1 = new JSONArray(jsonMessage1.get(1).toString());
+			BigDecimal timeStamp1 = jsonSpread1.getBigDecimal(2);
+			BigDecimal timeStamp2 = timeStamp1.multiply(new BigDecimal(1000));
+			long epoch = timeStamp2.longValue();
+			LocalDateTime ldt1 = Instant.ofEpochMilli(epoch).atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+			String europeanDatePattern = "dd.MM.yyyy hh:mm:ss:SSSSSS";
+			DateTimeFormatter europeanDateFormatter = DateTimeFormatter.ofPattern(europeanDatePattern);
+
+			jsonMessage1 = new JSONArray(subscribedMessageList.get(i + 1).getReceivedMessage());
+			jsonSpread1 = new JSONArray(jsonMessage1.get(1).toString());
+			timeStamp1 = jsonSpread1.getBigDecimal(2);
+			timeStamp2 = timeStamp1.multiply(new BigDecimal(1000));
+			epoch = timeStamp2.longValue();
+			LocalDateTime ldt2 = Instant.ofEpochMilli(epoch).atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+			Duration duration = Duration.between(ldt1, ldt2);
+			long nano_seconds = duration.getNano();
+			System.out.println(String.format("Timestamp %s is greater than %s by %s nano seconds", europeanDateFormatter.format(ldt2),
+					europeanDateFormatter.format(ldt1),nano_seconds));
+			
+			Assert.assertTrue("Timestamp increases over a time", nano_seconds >= 0);
+
+		}
+	}
+
 }

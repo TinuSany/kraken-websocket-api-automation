@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SystemStatus",
+    "description": "system Status Message",
+    "type": "object",
+    "properties": {
+        "connectionID": {
+            "description": "The unique identifier for a connection",
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true
+        },
+        "event": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        }
+     },
+    "required": ["connectionID", "event", "status", "version"]
+}
